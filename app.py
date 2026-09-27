@@ -14,7 +14,12 @@ import random
 app = Flask(__name__)
 
 CORS_ORIGINS = os.getenv('CORS_ORIGINS', '*')
-CORS(app, resources={r"/*": {"origins": CORS_ORIGINS}})
+if CORS_ORIGINS == '*':
+    cors_origins = ['*']
+else:
+    cors_origins = [origin.strip() for origin in CORS_ORIGINS.split(',') if origin.strip()]
+
+CORS(app, resources={r"/*": {"origins": cors_origins}}, supports_credentials=True)
 
 BASE_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = BASE_DIR.parent
