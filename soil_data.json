@@ -1,0 +1,15 @@
+
+[
+  {
+    "pH": 6.5,
+    "nitrogen": 20,
+    "phosphorus": 15,
+    "potassium": 30
+  },
+  {
+    "pH": 7.0,
+    "nitrogen": 30,
+    "phosphorus": 25,
+    "potassium": 20
+  }
+]
