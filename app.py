@@ -54,27 +54,42 @@ def load_model_from_disk():
 
 model = load_model_from_disk()
 
-if SOIL_DATA_PATH.exists():
-    state_soil_data = pd.read_csv(SOIL_DATA_PATH)
-else:
-    training_data_path = PROJECT_ROOT / 'model' / 'clean_crop_dataset_expanded.csv'
-    if not training_data_path.exists():
-        training_data_path = BASE_DIR / 'model' / 'clean_crop_dataset_expanded.csv'
-    if not training_data_path.exists():
-        raise FileNotFoundError(f"Training data not found: {training_data_path}")
-    state_soil_data = pd.read_csv(training_data_path)
-    state_soil_data = state_soil_data.groupby('state', as_index=False).agg(
-        N=('N', 'mean'),
-        P=('P', 'mean'),
-        K=('K', 'mean')
-    )
+try:
+    if SOIL_DATA_PATH.exists():
+        state_soil_data = pd.read_csv(SOIL_DATA_PATH)
+    else:
+        training_data_path = PROJECT_ROOT / 'model' / 'clean_crop_dataset_expanded.csv'
+        if not training_data_path.exists():
+            training_data_path = BASE_DIR / 'model' / 'clean_crop_dataset_expanded.csv'
+        if training_data_path.exists():
+            state_soil_data = pd.read_csv(training_data_path)
+            state_soil_data = state_soil_data.groupby('state', as_index=False).agg(
+                N=('N', 'mean'),
+                P=('P', 'mean'),
+                K=('K', 'mean')
+            )
+        else:
+            state_soil_data = pd.DataFrame(columns=['state', 'N', 'P', 'K'])
+except Exception as exc:
+    print(f"Could not load soil metadata: {exc}")
+    state_soil_data = pd.DataFrame(columns=['state', 'N', 'P', 'K'])
 
-all_states = state_soil_data['state'].dropna().astype(str).unique().tolist()
-
-if CROP_RECOMMENDATION_DATA_PATH.exists():
-    crop_data_for_soil_types = pd.read_csv(CROP_RECOMMENDATION_DATA_PATH)
-    all_soil_types = sorted(crop_data_for_soil_types['soil_type'].dropna().unique().tolist())
+if 'state' in state_soil_data.columns:
+    all_states = state_soil_data['state'].dropna().astype(str).unique().tolist()
 else:
+    all_states = []
+
+try:
+    if CROP_RECOMMENDATION_DATA_PATH.exists():
+        crop_data_for_soil_types = pd.read_csv(CROP_RECOMMENDATION_DATA_PATH)
+        if 'soil_type' in crop_data_for_soil_types.columns:
+            all_soil_types = sorted(crop_data_for_soil_types['soil_type'].dropna().unique().tolist())
+        else:
+            all_soil_types = ['Clay', 'Alluvial', 'Laterite', 'Loamy', 'Sandy']
+    else:
+        all_soil_types = ['Clay', 'Alluvial', 'Laterite', 'Loamy', 'Sandy']
+except Exception as exc:
+    print(f"Could not load soil type metadata: {exc}")
     all_soil_types = ['Clay', 'Alluvial', 'Laterite', 'Loamy', 'Sandy']
 
 
